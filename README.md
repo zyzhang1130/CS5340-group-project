@@ -4,6 +4,7 @@ The CIFAR-10 dataset with documentation: http://www.cs.toronto.edu/~kriz/cifar.h
 Use CIFAR-10 python version
 
 
+Tutorial on loading dataset from ML framework
 MNIST
 tensorflow
 https://www.tensorflow.org/datasets/overview
