@@ -1,0 +1,5 @@
+pytorch-lightning
+pytorch-lightning-bolts
+torch 
+torchvision 
+torchaudio
