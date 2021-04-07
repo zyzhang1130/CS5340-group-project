@@ -75,7 +75,7 @@ for sheet in attack_names.keys():
     plt.show()
     # plt.savefig(fig_title + ".png")
 
-# plot across the model dimension, i.e. how a particular model perform under different attacks
+# plot across the model dimension, i.e. how a particular model performs under different attacks
 for idx, dm in discriminative_models.items():
     for sheet in attack_names.keys():
         df = pd.read_excel(xls, sheet)
