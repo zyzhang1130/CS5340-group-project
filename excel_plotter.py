@@ -50,12 +50,11 @@ for sheet in attack_names.keys():
     eps = df.columns[2:13].values
     eps[0] = 0
 
-    i = 0
+
     # plot for discriminative models
     for idx, dm in discriminative_models.items():
         acc = df.loc[idx][2:13]
         plt.plot(eps, acc, label=dm, marker='o')
-        i += 1
     fig_title = "Discriminative Models Against " + attack_names[sheet]
     plt.title(fig_title)
     plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left', prop=fontP)
@@ -67,7 +66,6 @@ for sheet in attack_names.keys():
     for idx, gm in generative_models.items():
         acc = df.loc[idx][2:13].values
         plt.plot(eps, acc, label=gm, marker='o')
-        i += 1
     fig_title = "Generative Models Against " + attack_names[sheet]
     plt.title(fig_title)
     plt.legend(bbox_to_anchor=(1.05, 1.0), loc='upper left', prop=fontP)
@@ -75,7 +73,7 @@ for sheet in attack_names.keys():
     plt.show()
     # plt.savefig(fig_title + ".png")
 
-# plot across the model dimension, i.e. how a particular model performs under different attacks
+# plot across the model dimension, i.e. how a particular model perform under different attacks
 for idx, dm in discriminative_models.items():
     for sheet in attack_names.keys():
         df = pd.read_excel(xls, sheet)
@@ -102,7 +100,4 @@ for idx, gm in generative_models.items():
     plt.tight_layout()
     plt.show()
     # plt.savefig(gm + ".png")
-
-
-
-
+ 
