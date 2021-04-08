@@ -38,7 +38,9 @@ generative_models = {
     14: "VAE + MRF"
 }
 
-
+# define this based on the relevant indices, i.e. number of epsilons (including the base value 0)
+start_idx = 2
+end_idx = 13
 
 fontP = FontProperties()
 fontP.set_size('x-small')
@@ -47,13 +49,13 @@ fontP.set_size('x-small')
 for sheet in attack_names.keys():
     df = pd.read_excel(xls, sheet)
     # fix first epsilon
-    eps = df.columns[2:13].values
+    eps = df.columns[start_idx:end_idx].values
     eps[0] = 0
 
 
     # plot for discriminative models
     for idx, dm in discriminative_models.items():
-        acc = df.loc[idx][2:13]
+        acc = df.loc[idx][start_idx:end_idx]
         plt.plot(eps, acc, label=dm, marker='o')
     fig_title = "Discriminative Models Against " + attack_names[sheet]
     plt.title(fig_title)
@@ -64,7 +66,7 @@ for sheet in attack_names.keys():
 
     # plot for generative models
     for idx, gm in generative_models.items():
-        acc = df.loc[idx][2:13].values
+        acc = df.loc[idx][start_idx:end_idx].values
         plt.plot(eps, acc, label=gm, marker='o')
     fig_title = "Generative Models Against " + attack_names[sheet]
     plt.title(fig_title)
@@ -77,8 +79,8 @@ for sheet in attack_names.keys():
 for idx, dm in discriminative_models.items():
     for sheet in attack_names.keys():
         df = pd.read_excel(xls, sheet)
-        acc = df.loc[idx][2:13].values
-        eps = df.columns[2:13].values
+        acc = df.loc[idx][start_idx:end_idx].values
+        eps = df.columns[start_idx:end_idx].values
         eps[0] = 0
         plt.plot(eps, acc, label=attack_names[sheet], marker='o')
     plt.title(dm)
@@ -91,8 +93,8 @@ for idx, dm in discriminative_models.items():
 for idx, gm in generative_models.items():
     for sheet in attack_names.keys():
         df = pd.read_excel(xls, sheet)
-        acc = df.loc[idx][2:13].values
-        eps = df.columns[2:13].values
+        acc = df.loc[idx][start_idx:end_idx].values
+        eps = df.columns[start_idx:end_idx].values
         eps[0] = 0
         plt.plot(eps, acc, label=attack_names[sheet], marker='o')
     plt.title(gm)
@@ -100,4 +102,3 @@ for idx, gm in generative_models.items():
     plt.tight_layout()
     plt.show()
     # plt.savefig(gm + ".png")
- 
