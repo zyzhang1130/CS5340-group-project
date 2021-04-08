@@ -63,6 +63,7 @@ for sheet in attack_names.keys():
     plt.tight_layout()
     plt.show()
     # plt.savefig(fig_title + ".png")
+    # plt.clf()
 
     # plot for generative models
     for idx, gm in generative_models.items():
@@ -74,6 +75,8 @@ for sheet in attack_names.keys():
     plt.tight_layout()
     plt.show()
     # plt.savefig(fig_title + ".png")
+    # plt.clf()
+
 
 # plot across the model dimension, i.e. how a particular model perform under different attacks
 for idx, dm in discriminative_models.items():
@@ -88,6 +91,8 @@ for idx, dm in discriminative_models.items():
     plt.tight_layout()
     plt.show()
     # plt.savefig(dm + ".png")
+    # plt.clf()
+
 
 
 for idx, gm in generative_models.items():
@@ -102,3 +107,4 @@ for idx, gm in generative_models.items():
     plt.tight_layout()
     plt.show()
     # plt.savefig(gm + ".png")
+    # plt.clf()
