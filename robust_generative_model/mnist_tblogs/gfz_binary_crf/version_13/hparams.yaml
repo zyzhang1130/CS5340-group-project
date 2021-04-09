@@ -29,7 +29,7 @@ gpus: 1
 gradient_clip_val: 0
 input_channels: 1
 input_height: 28
-k: 100
+k: 10
 kl_coeff: 1.0
 latent_dim: 64
 limit_predict_batches: 1.0

@@ -45,7 +45,7 @@ class VAE(pl.LightningModule):
         kl_coeff: float = 0.1,
         latent_dim: int = 64,
         lr: float = 1e-4,
-        k: int = 100,
+        k: int = 10,
         input_channels: int = 1,
         py_mode: int = 0,
         recon_loss_type: str = 'l2',
@@ -181,8 +181,10 @@ class VAE(pl.LightningModule):
             raise Exception("Unrecognized recon loss type")
 
     def straight_through_estimator(self, x): 
-        x_hard = torch.zeros_like(x)
-        x_hard[x>=0.5] = 1
+        # x_hard = torch.zeros_like(x)
+        # x_hard[x>=0.5] = 1
+        x_hard = x.clone().detach()
+        x_hard = (x_hard >= 0.5).int()
         x = x_hard + x - x.detach()
         return x
 
@@ -285,7 +287,7 @@ class VAE(pl.LightningModule):
             x[x >= 0.5] = 1
             x[x < 0.5] = 0
         batch_size = x.size(0)
-        self.k = batch_size
+        # self.k = batch_size
 
         # discriminative baseline
         # out = self.encoder(x).flatten(start_dim=1)
