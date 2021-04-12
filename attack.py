@@ -13,6 +13,7 @@ import eagerpy as ep
 import foolbox as fb
 import foolbox.attacks as fa
 import matplotlib.pyplot as plt
+from matplotlib import patches
 import torch
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
@@ -59,13 +60,13 @@ def main():
         {"name": "Fast Gradient Sign Method", "model": fa.LinfFastGradientAttack(), "epsilons": Linf_epsilons},
         {"name": "L2 Projected Gradient Descent", "model": fa.L2ProjectedGradientDescentAttack(), "epsilons": L2_epsilons},
         {"name": "Linf Projected Gradient Descent", "model": fa.LinfProjectedGradientDescentAttack(), "epsilons": Linf_epsilons},
-        {"name": "Carlini & Wagner L2 Attack", "model": fa.L2CarliniWagnerAttack(), "epsilons": CW_epsilons},
+        # {"name": "Carlini & Wagner L2 Attack", "model": fa.L2CarliniWagnerAttack(), "epsilons": CW_epsilons},
         # # decision-based attacks
-        # {"name": "Boundary Attack", "model": fa.BoundaryAttack(), "epsilons": L2_epsilons}, 
+        # {"name": "Boundary Attack", "model": fa.BoundaryAttack(), "epsilons": L2_epsilons},
         {"name": "Additive Uniform Noise Attack", "model": fa.LinfAdditiveUniformNoiseAttack(), "epsilons": Linf_epsilons},
         {"name": "Additive Gaussian Noise Attack", "model": fa.L2AdditiveGaussianNoiseAttack(), "epsilons": L2_epsilons},
-        {"name": "Linear Search Contrast Reduction Attack", "model": fa.LinearSearchContrastReductionAttack(distance=distances.linf), "epsilons": Linf_epsilons}, 
-        {"name": "Binary Search Contrast Reduction Attack", "model": fa.BinarySearchContrastReductionAttack(distance=distances.linf), "epsilons": Linf_epsilons}, 
+        {"name": "Linear Search Contrast Reduction Attack", "model": fa.LinearSearchContrastReductionAttack(distance=distances.linf), "epsilons": Linf_epsilons},
+        {"name": "Binary Search Contrast Reduction Attack", "model": fa.BinarySearchContrastReductionAttack(distance=distances.linf), "epsilons": Linf_epsilons},
         {"name": "Gaussian Blur Attack", "model": fa.GaussianBlurAttack(distance=distances.linf), "epsilons": Linf_epsilons}
     ]
 
@@ -107,5 +108,106 @@ def main():
         axs[i].set_title(attack["name"])
 
 
+def create_adversarial_examples():
+    # Load your trained model as fb.PyTorchModel here
+    integrated = Integrated()
+    integrated = integrated.eval()
+    fmodel = fb.PyTorchModel(integrated, bounds=(0, 1))
+
+    # keep num_batch as 1, otherwise the saved images will be overwritten in next batch
+    num_batch = 1
+    num_test = 10
+
+    test_dataset = MNIST(root='./data', download=True, train=False, transform=transforms.ToTensor())
+    test_dataloader = DataLoader(test_dataset, batch_size=num_test, shuffle=False)
+
+    Linf_epsilons = [
+        0,
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+    ]
+    CW_epsilons = [
+        0,
+        0.1,
+        1,
+        10,
+        100,
+        1000
+    ]
+    L2_epsilons = [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+    ]
+    attacks = [
+        # gradient-based attacks
+        {"name": "Fast Gradient Method", "model": fa.L2FastGradientAttack(), "epsilons": L2_epsilons},
+        {"name": "Fast Gradient Sign Method", "model": fa.LinfFastGradientAttack(), "epsilons": Linf_epsilons},
+        {"name": "L2 Projected Gradient Descent", "model": fa.L2ProjectedGradientDescentAttack(), "epsilons": L2_epsilons},
+        {"name": "Linf Projected Gradient Descent", "model": fa.LinfProjectedGradientDescentAttack(), "epsilons": Linf_epsilons},
+        # {"name": "Carlini & Wagner L2 Attack", "model": fa.L2CarliniWagnerAttack(), "epsilons": CW_epsilons},
+        # # decision-based attacks
+        # {"name": "Boundary Attack", "model": fa.BoundaryAttack(), "epsilons": L2_epsilons},
+        {"name": "Additive Uniform Noise Attack", "model": fa.LinfAdditiveUniformNoiseAttack(), "epsilons": Linf_epsilons},
+        {"name": "Additive Gaussian Noise Attack", "model": fa.L2AdditiveGaussianNoiseAttack(), "epsilons": L2_epsilons},
+        {"name": "Linear Search Contrast Reduction Attack", "model": fa.LinearSearchContrastReductionAttack(distance=distances.linf), "epsilons": Linf_epsilons},
+        {"name": "Binary Search Contrast Reduction Attack", "model": fa.BinarySearchContrastReductionAttack(distance=distances.linf), "epsilons": Linf_epsilons},
+        {"name": "Gaussian Blur Attack", "model": fa.GaussianBlurAttack(distance=distances.linf), "epsilons": Linf_epsilons}
+    ]
+
+    for i, attack in enumerate(attacks):
+        count = 0
+        for images, labels in test_dataloader:
+            if count == num_batch:
+                break
+            images = ep.astensor(images)
+            labels = ep.astensor(labels)
+
+            # The raw adversarial examples. This depends on the attack and we cannot make an guarantees about this output.
+            # The clipped adversarial examples. These are guaranteed to not be perturbed more than epsilon and thus are the actual adversarial examples you want to visualize. Note that some of them might not actually switch the class. To know which samples are actually adversarial, you should look at the third tensor.
+            # The third tensor contains a boolean for each sample, indicating which samples are true adversarials that are both misclassified and within the epsilon balls around the clean samples.
+            raw_adv, clipped_adv, is_adv = attack["model"](fmodel, images, labels, epsilons=attack["epsilons"])
+            plot_images(attack, clipped_adv, is_adv)
+
+            count += 1
+
+
+def plot_images(attack, clipped_adv, is_adv):
+    save_images = True
+    model_name = "model_name"  # fill in model name here
+
+    # convert list to tensor: num_epsilon x num_test x channel(1) x width(28) x height(28)
+    epsilons = attack["epsilons"]
+    num_epsilon = len(epsilons)
+    num_test = clipped_adv[0].shape[0]
+    clipped_adv_formatted = np.zeros((num_epsilon, num_test, 1, 28, 28))
+    for i in range(num_epsilon):
+        clipped_adv_formatted[i] = clipped_adv[i].numpy()
+
+    is_adv = is_adv.numpy()
+
+    for test_id in range(num_test):
+        fig, axs = plt.subplots(1, num_epsilon, sharex='col', sharey='row', figsize=(20, 5))
+        for eps_id, ax in enumerate(axs.flat):
+            image = clipped_adv_formatted[eps_id][test_id]
+            image = np.squeeze(image, axis=0)
+            ax.matshow(image)
+            ax.axis('off')
+            title = "original image" if (eps_id == 0) else "epsilon = {}".format(epsilons[eps_id])
+            ax.set_title(title)
+            # draw red border if perturbed image is an adversarial example
+            if is_adv[eps_id][test_id]:
+                border = patches.Rectangle((0, 0), 27, 27, linewidth=2, edgecolor='r', facecolor='none')
+                ax.add_patch(border)
+            if save_images:
+                plt.savefig("{}-{}-{}.png".format(model_name, attack["name"], test_id))
+
+
 if __name__ == '__main__':
-    main()
+    create_adversarial_examples()
